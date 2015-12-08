@@ -1,0 +1,25 @@
+name:                CodeThief
+version:             0.1.0.0
+synopsis:            A bot stealing random gists from Github
+description:         Please see README.md
+homepage:            http://github.com/gaoyuan/CodeThief
+license:             BSD3
+license-file:        LICENSE
+author:              Yuan Gao
+maintainer:          example@example.com
+copyright:           2015 Yuan Gao
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable CodeThief
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       aeson
+                     , base >= 4.7 && < 5
+                     , bytestring
+                     , containers
+                     , http-conduit
+                     , text
+                     , transformers
