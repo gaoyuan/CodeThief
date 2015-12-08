@@ -6,7 +6,7 @@ homepage:            http://github.com/gaoyuan/CodeThief
 license:             BSD3
 license-file:        LICENSE
 author:              Yuan Gao
-maintainer:          example@example.com
+maintainer:          tjcharlesgao@gmail.com 
 copyright:           2015 Yuan Gao
 category:            Web
 build-type:          Simple
