@@ -43,6 +43,7 @@ downloadFile :: File -> IO ()
 downloadFile (File f l r) = do
   content <- getRequest r
   LBS.writeFile f content
+  putStrLn $ f ++ " downloaded."
 
 main :: IO ()
 main = do
