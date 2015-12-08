@@ -21,5 +21,6 @@ executable CodeThief
                      , bytestring
                      , containers
                      , http-conduit
+                     , process
                      , text
                      , transformers

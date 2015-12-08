@@ -9,11 +9,12 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Lazy as LBS
 import Network.HTTP.Conduit
 import System.Environment
+import System.Process
 
 data File =
-  File { filename :: !Text
-       , language :: !(Maybe Text)
-       , raw_url :: !Text
+  File { filename :: String
+       , language :: Maybe String
+       , raw_url :: String
        } deriving (Show, Generic, FromJSON)
 
 newtype Files = Files (LM.Map Text File) deriving (Show, Generic, FromJSON)
@@ -26,8 +27,8 @@ instance FromJSON Gist where
 sourceURI :: String
 sourceURI = "https://api.github.com/gists/public"
 
-getJSON :: String -> IO LBS.ByteString
-getJSON url = do
+getRequest :: String -> IO LBS.ByteString
+getRequest url = do
   request <- liftIO $ parseUrl url
   let requestWithHeaders = request { requestHeaders = [("User-Agent", "CodeThief")] }
   manager <- liftIO $ newManager tlsManagerSettings
@@ -38,9 +39,21 @@ getAllFiles :: Gists -> [File]
 getAllFiles (Gists []) = []
 getAllFiles (Gists (Gist (Files m):xs)) = LM.elems m ++ getAllFiles (Gists xs)
 
+downloadFile :: File -> IO ()
+downloadFile (File f l r) = do
+  content <- getRequest r
+  LBS.writeFile f content
+
 main :: IO ()
 main = do
-  json <- getJSON sourceURI
+  json <- getRequest sourceURI
   case (decode json :: Maybe Gists) of
     Nothing -> putStrLn "Failed to parse JSON data."
-    Just gists -> print $ length $ getAllFiles gists
+    Just gists -> do
+      sequence $ map downloadFile (getAllFiles gists)
+      (_, _, _, handle) <- createProcess $ shell "git add ."
+      waitForProcess handle
+      (_, _, _, handle) <- createProcess $ shell "git commit -m 'Seems a bunch of interesting stuff!'"
+      waitForProcess handle
+      (_, _, _, handle) <- createProcess $ shell "git push origin master"
+      return ()
