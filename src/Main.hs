@@ -2,12 +2,13 @@
 module Main where
 
 import Data.Aeson
-import qualified Data.Map.Lazy as LM
 import Data.Text (Text)
 import GHC.Generics
+import Control.Concurrent.Async (mapConcurrently)
 import Control.Monad.IO.Class (liftIO)
-import qualified Data.ByteString.Lazy as LBS
 import Network.HTTP.Conduit
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Map.Lazy as LM
 import System.Environment
 import System.Process
 
@@ -51,7 +52,7 @@ main = do
   case (decode json :: Maybe Gists) of
     Nothing -> putStrLn "Failed to parse JSON data."
     Just gists -> do
-      sequence $ map downloadFile (getAllFiles gists)
+      mapConcurrently downloadFile (getAllFiles gists)
       (_, _, _, handle) <- createProcess $ shell "git add ."
       waitForProcess handle
       (_, _, _, handle) <- createProcess $ shell "git commit -m 'Seems a bunch of interesting stuff!'"
