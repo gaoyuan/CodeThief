@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings, DeriveGeneric, DeriveAnyClass #-}
 module Main where
 
+import Control.Concurrent.Async (mapConcurrently)
+import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
-import Control.Concurrent.Async (mapConcurrently)
-import Control.Monad.IO.Class (liftIO)
+import Git
 import Network.HTTP.Conduit
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Map.Lazy as LM
@@ -53,9 +54,4 @@ main = do
     Nothing -> putStrLn "Failed to parse JSON data."
     Just gists -> do
       mapConcurrently downloadFile (getAllFiles gists)
-      (_, _, _, handle) <- createProcess $ shell "git add ."
-      waitForProcess handle
-      (_, _, _, handle) <- createProcess $ shell "git commit -m 'Seems a bunch of interesting stuff!'"
-      waitForProcess handle
-      (_, _, _, handle) <- createProcess $ shell "git push origin master"
-      return ()
+      addCommitPush "Food for thought."
