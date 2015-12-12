@@ -1,57 +1,9 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric, DeriveAnyClass #-}
 module Main where
 
-import Control.Concurrent.Async (mapConcurrently)
-import Control.Monad.IO.Class (liftIO)
-import Data.Aeson
-import Data.Text (Text)
-import GHC.Generics
+import File
 import Git
-import Network.HTTP.Conduit
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Map.Lazy as LM
-import System.Environment
-import System.Process
-
-data File =
-  File { filename :: String
-       , language :: Maybe String
-       , raw_url :: String
-       } deriving (Show, Generic, FromJSON)
-
-newtype Files = Files (LM.Map Text File) deriving (Show, Generic, FromJSON)
-newtype Gist = Gist Files deriving Show
-newtype Gists = Gists [Gist] deriving (Show, Generic, FromJSON)
-
-instance FromJSON Gist where
-  parseJSON (Object v) = Gist <$> v .: "files"
-
-sourceURI :: String
-sourceURI = "https://api.github.com/gists/public"
-
-getRequest :: String -> IO LBS.ByteString
-getRequest url = do
-  request <- liftIO $ parseUrl url
-  let requestWithHeaders = request { requestHeaders = [("User-Agent", "CodeThief")] }
-  manager <- liftIO $ newManager tlsManagerSettings
-  response <- httpLbs requestWithHeaders manager
-  return $ responseBody response
-
-getAllFiles :: Gists -> [File]
-getAllFiles (Gists []) = []
-getAllFiles (Gists (Gist (Files m):xs)) = LM.elems m ++ getAllFiles (Gists xs)
-
-downloadFile :: File -> IO ()
-downloadFile (File f l r) = do
-  content <- getRequest r
-  LBS.writeFile f content
-  putStrLn $ f ++ " downloaded."
 
 main :: IO ()
 main = do
-  json <- getRequest sourceURI
-  case (decode json :: Maybe Gists) of
-    Nothing -> putStrLn "Failed to parse JSON data."
-    Just gists -> do
-      mapConcurrently downloadFile (getAllFiles gists)
-      addCommitPush "Food for thought."
+  pullFilesToDisk
+  addCommitPush "Feeling hard working today!"
